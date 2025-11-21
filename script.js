@@ -36,7 +36,7 @@ async function fetchDownloadInfo(videoUrl) {
     "&hd=1";
 
   const res = await fetch(apiUrl, {
-    method: "POST",
+    method: "GET",
     headers: {
       Accept: "application/json",
     },
