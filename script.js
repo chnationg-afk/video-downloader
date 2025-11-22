@@ -422,11 +422,103 @@ function renderResult(payload) {
     h.style.fontWeight = "700";
     h.style.margin = "8px 0";
     h.textContent = title;
+function renderResult(payload) {
+  // normalize payload if wrapper { ok: true, result: {...} }
+  if (payload && payload.ok && payload.result) payload = payload.result;
+
+  // Try detect title/thumbnail/downloads
+  const title = payload.title || payload.name || payload.desc || (payload.data && payload.data.title) || "";
+  const thumbnail = pickThumbnail(payload);
+
+  // Gather download links
+  const downloads = [];
+
+  // If API already returns downloads array
+  if (Array.isArray(payload.downloads) && payload.downloads.length) {
+    payload.downloads.forEach(d => {
+      downloads.push({
+        label: d.label || d.quality || d.name || "Video",
+        url: d.url || d.link || d.src || d,
+        size: d.size || d.filesize || "",
+        filename: d.filename || ""
+      });
+    });
+  }
+
+  // common fields (tikwm-like)
+  if (!downloads.length) {
+    if (payload.play) downloads.push({ label: "Tanpa Watermark", url: payload.play, size: payload.size || "" });
+    if (payload.wmplay) downloads.push({ label: "Dengan Watermark", url: payload.wmplay, size: payload.size || "" });
+    if (payload.video && payload.video.play_addr) downloads.push({ label: "Play", url: payload.video.play_addr });
+  }
+
+  // fallback: extract URLs from object
+  if (!downloads.length) {
+    const urls = Array.from(collectUrls(payload));
+    // prefer mp4/play-like urls
+    const preferred = urls.filter(u => /\.mp4(\?|$)/i.test(u) || /\/play\/|\/video\//i.test(u) || /play/i.test(u));
+    const uniq = Array.from(new Set(preferred.length ? preferred : urls));
+    uniq.forEach((u, i) => downloads.push({ label: `Detected ${i+1}`, url: u, size: "" }));
+  }
+
+  // UI: clear previous
+  resultList.innerHTML = "";
+
+  // --- try to find a playable URL (mp4 / play-like) first ---
+  let playableUrl = null;
+  for (const d of downloads) {
+    if (d.url && ( /\.mp4(\?|$)/i.test(d.url) || /\/play\/|\/video\//i.test(d.url) )) {
+      playableUrl = d.url;
+      break;
+    }
+  }
+  // if none matched, pick first http-looking url as last resort
+  if (!playableUrl && downloads.length) {
+    const firstCandidate = downloads.find(d => typeof d.url === "string" && /^https?:\/\//i.test(d.url));
+    if (firstCandidate) playableUrl = firstCandidate.url;
+  }
+
+  // If we have a playable url and video player present -> show it
+  if (playableUrl && previewVideo && playerBox) {
+    // set crossOrigin - may help with some CORS cases (still not guaranteed)
+    try { previewVideo.crossOrigin = "anonymous"; } catch (e) {}
+    previewVideo.src = playableUrl;
+    // set poster to thumbnail if available
+    if (thumbnail) previewVideo.poster = thumbnail;
+    previewVideo.load();
+    playerBox.classList.remove("hidden");
+
+    // hide thumbnail fallback (we will not show the <img> when video chosen)
+    if (thumbBox) thumbBox.classList.add("hidden");
+  } else {
+    // show thumbnail if present (fallback)
+    if (thumbnail) {
+      if (thumbBox && thumbImg) {
+        thumbImg.src = thumbnail;
+        thumbBox.classList.remove("hidden");
+      } else {
+        const img = document.createElement("img");
+        img.src = thumbnail;
+        img.alt = title || "thumbnail";
+        img.style.maxWidth = "100%";
+        img.style.borderRadius = "10px";
+        resultList.appendChild(img);
+      }
+    }
+    // hide player if no playable url
+    if (playerBox) playerBox.classList.add("hidden");
+  }
+
+  // Title
+  if (title) {
+    const h = document.createElement("div");
+    h.style.fontWeight = "700";
+    h.style.margin = "8px 0";
+    h.textContent = title;
     resultList.appendChild(h);
   }
 
-  // Render only "Open" button for each detected download (if you still want Open),
-  // but DO NOT render per-video Download button (we'll provide global Foto/Audio downloads instead).
+  // Render download rows (buttons)
   downloads.forEach(d => {
     const node = document.createElement("div");
     node.className = "result-item";
@@ -438,46 +530,11 @@ function renderResult(payload) {
 
       <div class="download-actions">
         <a href="${d.url}" target="_blank" class="open-btn">Open</a>
+        <a href="${d.url}" download class="download-btn">Download</a>
       </div>
     `;
     resultList.appendChild(node);
   });
-
-  // === HERE: add single row with Download Foto + Download Audio (if available) ===
-  const extras = document.createElement("div");
-  extras.className = "result-item";
-  extras.style.display = "flex";
-  extras.style.gap = "12px";
-  extras.style.marginTop = "10px";
-
-  if (photoUrl) {
-    const aPhoto = document.createElement("a");
-    aPhoto.href = photoUrl;
-    aPhoto.download = "";
-    aPhoto.className = "download-btn";
-    aPhoto.textContent = "Download Foto";
-    extras.appendChild(aPhoto);
-  }
-
-  if (audioUrl) {
-    const aAudio = document.createElement("a");
-    aAudio.href = audioUrl;
-    aAudio.download = "";
-    aAudio.className = "download-btn";
-    aAudio.textContent = "Download Audio";
-    extras.appendChild(aAudio);
-  }
-
-  // If neither exist, tampilkan hint kecil
-  if (extras.children.length) {
-    resultList.appendChild(extras);
-  } else {
-    const hint = document.createElement("div");
-    hint.style.opacity = "0.8";
-    hint.style.marginTop = "8px";
-    hint.textContent = "Tidak ada file foto/audio yang tersedia untuk diunduh.";
-    resultList.appendChild(hint);
-  }
 
   resultBox.classList.remove("hidden");
 }
