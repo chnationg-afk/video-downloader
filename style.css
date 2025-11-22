@@ -214,3 +214,56 @@ body::before {
     width: 100%;
   }
 }
+/* ===== Lightning animated overlay ===== */
+#lightning {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  mix-blend-mode: screen; /* bikin glow menyatu ke bg */
+  z-index: 0; /* di bawah .page (page punya z-index:1) */
+  opacity: 0;
+  transition: opacity 120ms ease-out;
+  background-repeat: no-repeat;
+  background-size: cover;
+  filter: brightness(1.05) contrast(1.05);
+}
+
+/* cepat flash animation (dipakai class .flash) */
+#lightning.flash {
+  animation: lightning-fade 300ms ease-out forwards;
+}
+
+@keyframes lightning-fade {
+  0%   { opacity: 0; transform: scale(1); }
+  20%  { opacity: 1; transform: scale(1.02); }
+  50%  { opacity: 0.6; transform: scale(1.01); }
+  100% { opacity: 0; transform: scale(1); }
+}
+
+/* optional: sedikit garis petir bergerak (lebih dekoratif) */
+#lightning .bolt {
+  position: absolute;
+  width: 140%;
+  height: 140%;
+  left: -20%;
+  top: -20%;
+  background-image: radial-gradient(circle at var(--x,50%) var(--y,10%),
+    rgba(255,255,255,0.95) 0%,
+    rgba(200,230,255,0.35) 6%,
+    rgba(120,160,255,0.10) 12%,
+    transparent 18%);
+  mix-blend-mode: screen;
+  opacity: 0;
+  transform-origin: center;
+  pointer-events: none;
+  filter: blur(6px) saturate(1.2);
+}
+#lightning .bolt.show {
+  animation: bolt-fade 420ms ease-out forwards;
+}
+@keyframes bolt-fade {
+  0% { opacity: 0; transform: scale(0.96) rotate(0deg); }
+  20% { opacity: 1; transform: scale(1.02) rotate(-2deg); }
+  60% { opacity: 0.5; transform: scale(1.01) rotate(2deg); }
+  100% { opacity: 0; transform: scale(1) rotate(0deg); }
+}
