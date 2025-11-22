@@ -202,19 +202,29 @@ function renderResult(payload) {
   // UI: show thumbnail / video preview if available
   resultList.innerHTML = "";
 
-  if (thumbnail) {
-    if (thumbBox && thumbImg) {
-      thumbImg.src = thumbnail;
-      thumbBox.classList.remove("hidden");
-    } else {
-      const img = document.createElement("img");
-      img.src = thumbnail;
-      img.alt = title || "thumbnail";
-      img.style.maxWidth = "100%";
-      img.style.borderRadius = "10px";
-      resultList.appendChild(img);
-    }
+  // Cek apakah video bisa diputar (mp4)
+let videoPlayable = false;
+if (downloads.length) {
+  const first = downloads[0].url;
+  if (/\.mp4(\?|$)/i.test(first) || /play/i.test(first)) {
+    videoPlayable = true;
   }
+}
+
+// Jika video playable → sembunyikan thumbnail
+if (!videoPlayable && thumbnail) {
+  if (thumbBox && thumbImg) {
+    thumbImg.src = thumbnail;
+    thumbBox.classList.remove("hidden");
+  } else {
+    const img = document.createElement("img");
+    img.src = thumbnail;
+    img.alt = title || "thumbnail";
+    img.style.maxWidth = "100%";
+    img.style.borderRadius = "10px";
+    resultList.appendChild(img);
+  }
+}
 
   if (title) {
     const h = document.createElement("div");
@@ -280,7 +290,7 @@ async function processUrl(videoUrl) {
     showStatus("Error: " + msg, "error");
   } finally {
     gasBtn.disabled = false;
-    gasBtn.textContent = "Gas";
+    gasBtn.textContent = "Download";
   }
 }
 
