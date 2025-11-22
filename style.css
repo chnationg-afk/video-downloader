@@ -198,36 +198,36 @@ body {
 /* .... isi style.css ... */
 
 /* ---- BUTTON ---- */
-.download-btn {
-  display: inline-block;
-  padding: 10px 16px;
-  margin-top: 6px;
-  background: #2a53ff;
-  color: #fff;
-  border-radius: 8px;
-  font-weight: 600;
-  text-decoration: none;
-  transition: 0.2s;
-}
-
-.download-btn:hover {
-  background: #1938c7;
-}
-
 .open-btn {
   display: inline-block;
-  padding: 10px 16px;
-  margin-right: 8px;
-  margin-top: 6px;
+  padding: 12px 22px;
   background: transparent;
-  border: 2px solid #4b4bff;
-  color: #d1d1ff;
-  border-radius: 8px;
+  border: 2px solid #4b4bff;   /* warna border biru elegan */
+  color: #bfc7ff;              /* teks biru muda */
+  border-radius: 14px;
   font-weight: 600;
+  font-size: 16px;
   text-decoration: none;
-  transition: 0.2s;
+  transition: 0.2s ease;
 }
 
 .open-btn:hover {
-  background: rgba(75,75,255,0.2);
+  background: rgba(75, 75, 255, 0.15); /* biru muda transparan */
+}
+
+
+.download-btn {
+  display: inline-block;
+  padding: 12px 22px;
+  background: #2a53ff;        /* biru utama website */
+  color: #fff;
+  border-radius: 14px;
+  font-weight: 600;
+  font-size: 16px;
+  text-decoration: none;
+  transition: 0.2s ease;
+}
+
+.download-btn:hover {
+  background: #1938c7;        /* biru hover */
 }
